@@ -1,26 +1,408 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────
+   CHRONOS ATELIER — Global Design Token System
+   Source of truth: DESIGN.md § Colour System
+   ───────────────────────────────────────────── */
+
+/* Google Fonts are loaded in layout.tsx via next/font.
+   CSS custom properties for font families are set there
+   and referenced here as --font-editorial, --font-tech,
+   --font-ui. */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Void / Background ──────────────────── */
+  --color-void:          #0A0A0C;
+  --color-obsidian-1:    #111114;
+  --color-obsidian-2:    #1A1A1F;
+  --color-obsidian-3:    #242428;
+
+  /* ── Platinum / Text ────────────────────── */
+  --color-platinum-dim:    #6B6B78;
+  --color-platinum-mid:    #9D9DAA;
+  --color-platinum-bright: #C8C8D4;
+  --color-platinum-white:  #E8E8F0;
+
+  /* ── Rose Gold / Accent ─────────────────── */
+  --color-rose-gold-deep:   #B8962E;
+  --color-rose-gold:        #D4AF37;
+  --color-rose-gold-bright: #E5C158;
+  --color-rose-gold-sheen:  #F0D880;
+
+  /* ── Rare / Semantic ────────────────────── */
+  --color-sapphire:  #1E2B4A;
+  --color-error:     #C0392B;
+  --color-success:   #27634A;
+
+  /* ── Typography Scale (fluid) ───────────── */
+  --text-hero:     clamp(3.5rem, 7vw, 8rem);
+  --text-display:  clamp(2.5rem, 4.5vw, 5.5rem);
+  --text-title:    clamp(1.75rem, 2.5vw, 2.75rem);
+  --text-subtitle: clamp(1.125rem, 1.5vw, 1.375rem);
+  --text-body:     1rem;
+  --text-caption:  0.8125rem;
+  --text-micro:    0.6875rem;
+  --text-spec:     0.875rem;
+
+  /* ── Letter Spacing ─────────────────────── */
+  --tracking-logotype:  0.3em;
+  --tracking-display:   0.06em;
+  --tracking-ui:        0.12em;
+  --tracking-spec:      0.06em;
+  --tracking-body:      0.01em;
+
+  /* ── Spacing Scale (8px base) ───────────── */
+  --sp-1:  2px;
+  --sp-2:  4px;
+  --sp-3:  8px;
+  --sp-4:  12px;
+  --sp-5:  16px;
+  --sp-6:  24px;
+  --sp-7:  32px;
+  --sp-8:  48px;
+  --sp-9:  64px;
+  --sp-10: 96px;
+  --sp-11: 128px;
+  --sp-12: 192px;
+  --sp-13: 256px;
+
+  /* ── Layout ─────────────────────────────── */
+  --layout-max:  1440px;
+  --gutter:      clamp(1rem, 2.5vw, 2rem);
+
+  /* ── Duration Scale ─────────────────────── */
+  --dur-instant:   120ms;
+  --dur-fast:      280ms;
+  --dur-mid:       500ms;
+  --dur-slow:      900ms;
+  --dur-cinematic: 1800ms;
+
+  /* ── Easing (CSS) ───────────────────────── */
+  --ease-mechanical: cubic-bezier(0.25, 0.00, 0.10, 1.00);
+  --ease-sweep:      cubic-bezier(0.60, 0.00, 0.40, 1.00);
+  --ease-settle:     cubic-bezier(0.05, 0.70, 0.10, 1.00);
+
+  /* ── Brushed Platinum Gradient ──────────── */
+  --gradient-platinum: linear-gradient(
+    105deg,
+    #2A2A30 0%,
+    #3C3C44 25%,
+    #4E4E58 50%,
+    #3A3A42 75%,
+    #28282E 100%
+  );
 }
 
+/* ── Tailwind v4 Theme Bridge ───────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--color-void);
+  --color-foreground: var(--color-platinum-white);
+  --font-editorial:   var(--font-cormorant);
+  --font-tech:        var(--font-jetbrains);
+  --font-ui:          var(--font-space-grotesk);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Base Reset & Document ──────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background-color: var(--color-void);
+  color: var(--color-platinum-bright);
+  font-family: var(--font-space-grotesk, 'Space Grotesk', system-ui, sans-serif);
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: var(--tracking-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: auto; /* Lenis owns smooth scroll */
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-void);
+  color: var(--color-platinum-bright);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ── Typography Utilities ───────────────────── */
+.font-editorial {
+  font-family: var(--font-cormorant, 'Cormorant Garamond', Georgia, serif);
+}
+.font-tech {
+  font-family: var(--font-jetbrains, 'JetBrains Mono', 'Fira Code', monospace);
+  font-variant-numeric: tabular-nums;
+}
+.font-ui {
+  font-family: var(--font-space-grotesk, 'Space Grotesk', system-ui, sans-serif);
+}
+
+.text-hero     { font-size: var(--text-hero); }
+.text-display  { font-size: var(--text-display); }
+.text-title    { font-size: var(--text-title); }
+.text-subtitle { font-size: var(--text-subtitle); }
+.text-spec     { font-size: var(--text-spec); }
+.text-caption  { font-size: var(--text-caption); }
+.text-micro    { font-size: var(--text-micro); }
+
+.tracking-logotype { letter-spacing: var(--tracking-logotype); }
+.tracking-ui       { letter-spacing: var(--tracking-ui); }
+.tracking-spec     { letter-spacing: var(--tracking-spec); }
+.tracking-display  { letter-spacing: var(--tracking-display); }
+
+/* ── Colour Utilities ───────────────────────── */
+.text-rose-gold        { color: var(--color-rose-gold); }
+.text-rose-gold-bright { color: var(--color-rose-gold-bright); }
+.text-rose-gold-sheen  { color: var(--color-rose-gold-sheen); }
+.text-platinum-white   { color: var(--color-platinum-white); }
+.text-platinum-bright  { color: var(--color-platinum-bright); }
+.text-platinum-mid     { color: var(--color-platinum-mid); }
+.text-platinum-dim     { color: var(--color-platinum-dim); }
+
+.bg-void      { background-color: var(--color-void); }
+.bg-obsidian-1 { background-color: var(--color-obsidian-1); }
+.bg-obsidian-2 { background-color: var(--color-obsidian-2); }
+
+/* ── Rose Gold Rule Divider ─────────────────── */
+.rule-rose {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background-color: var(--color-rose-gold);
+  opacity: 0.20;
+}
+
+/* ── Rose Gold Button (Bordered) ────────────── */
+.btn-atelier {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  border: 1px solid var(--color-rose-gold);
+  color: var(--color-rose-gold-bright);
+  font-family: var(--font-space-grotesk, 'Space Grotesk', sans-serif);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  letter-spacing: var(--tracking-ui);
+  text-transform: uppercase;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color var(--dur-fast) var(--ease-sweep),
+    color       var(--dur-fast) var(--ease-sweep);
+  cursor: pointer;
+  background: transparent;
+}
+
+.btn-atelier::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 3px;
+  background: var(--color-rose-gold-bright);
+  transition: width var(--dur-fast) var(--ease-sweep);
+}
+
+.btn-atelier:hover {
+  border-color: var(--color-rose-gold-bright);
+  color: var(--color-rose-gold-sheen);
+}
+
+.btn-atelier:hover::before {
+  width: 100%;
+}
+
+.btn-atelier:focus-visible {
+  outline: 2px solid var(--color-rose-gold-bright);
+  outline-offset: 3px;
+}
+
+/* ── Navigation Bar ─────────────────────────── */
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--gutter);
+  height: 72px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(10, 10, 12, 0.85);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.08);
+}
+
+.nav-logotype {
+  font-family: var(--font-cormorant, 'Cormorant Garamond', Georgia, serif);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: var(--tracking-logotype);
+  color: var(--color-platinum-white);
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  list-style: none;
+}
+
+.nav-link {
+  font-family: var(--font-space-grotesk, sans-serif);
+  font-size: var(--text-caption);
+  font-weight: 300;
+  letter-spacing: var(--tracking-ui);
+  text-transform: uppercase;
+  color: var(--color-platinum-mid);
+  text-decoration: none;
+  position: relative;
+  transition: color var(--dur-instant) var(--ease-mechanical);
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--color-rose-gold);
+  transition: width var(--dur-fast) var(--ease-sweep);
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--color-platinum-white);
+}
+
+.nav-link.active::after {
+  width: 100%;
+}
+
+/* ── Section Layout ─────────────────────────── */
+.section-atelier {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--sp-12) var(--gutter);
+}
+
+.section-inner {
+  max-width: var(--layout-max);
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Rose Gold Sheen Keyframe ───────────────── */
+@keyframes rose-sheen {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes precision-arc {
+  from { stroke-dashoffset: 220; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* ── Loading Veil ───────────────────────────── */
+.loading-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--color-void);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: var(--sp-6);
+  transition: opacity var(--dur-mid) var(--ease-sweep);
+  pointer-events: none;
+}
+
+.loading-veil.hidden {
+  opacity: 0;
+}
+
+/* ── Metallic Sheen Surface ─────────────────── */
+.surface-platinum {
+  background: var(--gradient-platinum);
+}
+
+/* ── Scrollbar Styling ──────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-obsidian-1);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-rose-gold-deep);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-rose-gold);
+}
+
+/* ── Selection Colour ───────────────────────── */
+::selection {
+  background: rgba(212, 175, 55, 0.25);
+  color: var(--color-platinum-white);
+}
+
+/* ── Reduced Motion ─────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Focus Visible Global ───────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-rose-gold-bright);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+/* ── Spec Text Block ────────────────────────── */
+.spec-value {
+  font-family: var(--font-jetbrains, 'JetBrains Mono', monospace);
+  font-size: var(--text-spec);
+  letter-spacing: var(--tracking-spec);
+  color: var(--color-rose-gold-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+.spec-label {
+  font-family: var(--font-space-grotesk, sans-serif);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-ui);
+  text-transform: uppercase;
+  color: var(--color-platinum-dim);
 }
