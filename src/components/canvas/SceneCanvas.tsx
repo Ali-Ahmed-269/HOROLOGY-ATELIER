@@ -571,15 +571,7 @@ export default function SceneCanvas({ onReady }: SceneCanvasProps) {
       setWebglAvailable(false)
       onReady?.()
     }
-
-    // Failsafe: 4-second safety timeout to dismiss loading veil under any condition
-    const failsafe = setTimeout(() => {
-      console.warn('CHRONOS ATELIER — Failsafe triggered. Dismissing loading veil.')
-      onReady?.()
-    }, 4000)
-
-    return () => clearTimeout(failsafe)
-  }, [onReady])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const cleanupRef = useRef<(() => void) | null>(null)
 
@@ -654,6 +646,7 @@ export default function SceneCanvas({ onReady }: SceneCanvasProps) {
           // Trigger loading veil dismissal & mark GL ready
           setIsGlReady(true)
           onReady?.()
+          // Note: onReady is idempotent — LoadingVeil ignores duplicate calls
         }}
       >
         {isGlReady && <SceneRoot onReady={onReady} />}

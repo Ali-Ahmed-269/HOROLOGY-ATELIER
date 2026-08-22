@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import LenisProvider from '@/components/LenisProvider'
 import LoadingVeil from '@/components/LoadingVeil'
@@ -683,6 +683,7 @@ function ReserveSection() {
    ───────────────────────────────────────────────────────────── */
 export default function Home() {
   const [canvasReady, setCanvasReady] = useState(false)
+  const handleCanvasReady = useCallback(() => setCanvasReady(true), [])
 
   return (
     <LenisProvider>
@@ -690,7 +691,7 @@ export default function Home() {
       <LoadingVeil isReady={canvasReady} />
 
       {/* Fixed WebGL canvas — z-index 0, pointer-events none */}
-      <SceneCanvas onReady={() => setCanvasReady(true)} />
+      <SceneCanvas onReady={handleCanvasReady} />
 
       {/* Scrollable HTML overlay — z-index 10 */}
       <div
