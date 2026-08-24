@@ -94,7 +94,7 @@ function PostStack({ dofRef }: PostStackProps) {
   return (
     <EffectComposer multisampling={4}>
       <DepthOfField ref={dofRef} focusDistance={0.02} focalLength={0.15} bokehScale={3} height={480} />
-      <Bloom luminanceThreshold={0.6} luminanceSmoothing={0.1} intensity={0.4} mipmapBlur />
+      <Bloom luminanceThreshold={0.85} luminanceSmoothing={0.4} intensity={0.15} mipmapBlur />
       <Vignette offset={0.4} darkness={0.7} eskil={false} />
     </EffectComposer>
   )
@@ -138,10 +138,10 @@ const handMat = new THREE.MeshStandardMaterial({
 })
 
 const dialMat = new THREE.MeshPhysicalMaterial({
-  color: new THREE.Color('#0A0A0C'),
-  metalness: 0.3,
-  roughness: 0.6,
-  envMapIntensity: 0.5,
+  color: new THREE.Color('#C8C0B0'),
+  metalness: 0.02,
+  roughness: 0.95,
+  envMapIntensity: 0.05,
 })
 
 const crystalMat = new THREE.MeshPhysicalMaterial({
@@ -353,18 +353,24 @@ function WatchExploded({ store }: WatchExplodedProps) {
 
       {/* ── Layer 3: Hands ───────────────────────── */}
       <group ref={handsRef}>
-        {/* Hour hand */}
-        <mesh position={[0, 0.21, -0.22]} material={handMat}>
-          <boxGeometry args={[0.04, 0.005, 0.44]} />
-        </mesh>
-        {/* Minute hand */}
-        <mesh position={[0, 0.215, -0.32]} rotation={[0, Math.PI / 4, 0]} material={handMat}>
-          <boxGeometry args={[0.028, 0.005, 0.64]} />
-        </mesh>
-        {/* Seconds hand — thin, rose gold */}
-        <mesh position={[0, 0.218, -0.36]} rotation={[0, -Math.PI / 6, 0]} material={roseGoldMat}>
-          <boxGeometry args={[0.012, 0.003, 0.72]} />
-        </mesh>
+        {/* Hour hand — 10 o'clock position, offset so pivot is at center */}
+        <group rotation={[0, -Math.PI * 0.17, 0]}>
+          <mesh position={[0, 0.21, -0.16]} material={handMat}>
+            <boxGeometry args={[0.04, 0.006, 0.32]} />
+          </mesh>
+        </group>
+        {/* Minute hand — 2 o'clock position */}
+        <group rotation={[0, Math.PI * 0.17, 0]}>
+          <mesh position={[0, 0.215, -0.22]} material={handMat}>
+            <boxGeometry args={[0.028, 0.005, 0.44]} />
+          </mesh>
+        </group>
+        {/* Seconds hand — 30 seconds position */}
+        <group rotation={[0, Math.PI * 0.5, 0]}>
+          <mesh position={[0, 0.218, -0.28]} material={roseGoldMat}>
+            <boxGeometry args={[0.012, 0.003, 0.56]} />
+          </mesh>
+        </group>
       </group>
 
       {/* ── Layer 4: Sapphire crystal (shallowest) ── */}
@@ -432,6 +438,15 @@ function GearKinematics({ store }: GearKinematicsProps) {
     GEAR_CHAIN.map(g => new THREE.CylinderGeometry(g.r, g.r, 0.022, Math.round(g.r * 80 + 12))),
     [])
 
+  const gearMats = useMemo(() =>
+    GEAR_CHAIN.map((_, i) => {
+      const mat = (i === 0 ? roseGoldMat : platinumMat).clone()
+      mat.transparent = true
+      mat.opacity = 0
+      return mat
+    }),
+  [])
+
   useFrame((_, delta) => {
     if (!groupRef.current) return
 
@@ -445,14 +460,8 @@ function GearKinematics({ store }: GearKinematicsProps) {
     // Fade gears in/out with explode progress
     const p = store.current.explodeProgress
     const opacity = Math.min(p * 3, 1) * Math.max(1 - (p - 0.8) * 5, 0)
-    groupRef.current.traverse(obj => {
-      if ((obj as THREE.Mesh).isMesh) {
-        const mat = (obj as THREE.Mesh).material as THREE.MeshPhysicalMaterial
-        if (mat.opacity !== undefined) {
-          mat.opacity = Math.max(opacity, 0)
-          mat.transparent = true
-        }
-      }
+    gearMats.forEach(mat => {
+      mat.opacity = Math.max(opacity, 0)
     })
   })
 
@@ -464,7 +473,7 @@ function GearKinematics({ store }: GearKinematicsProps) {
           ref={el => { if (el) gearRefs.current[i] = el }}
           position={[g.x, 0, 0.05]}
           geometry={gearGeos[i]}
-          material={i === 0 ? roseGoldMat : platinumMat}
+          material={gearMats[i]}
           castShadow
         />
       ))}
@@ -562,8 +571,8 @@ function SceneRoot({ onReady }: { onReady?: () => void }) {
         trigger: '#movement',
         start: 'top top',
         end: 'bottom top',
-        onEnter: () => setCamera(0.3, 0.1, 2.2, 0.008),
-        onEnterBack: () => setCamera(0.3, 0.1, 2.2, 0.008),
+        onEnter: () => setCamera(0, 0.8, 3.5, 0.008),
+        onEnterBack: () => setCamera(0, 0.8, 3.5, 0.008),
       }),
       ScrollTrigger.create({
         trigger: '#craftsmanship',
@@ -602,13 +611,13 @@ function SceneRoot({ onReady }: { onReady?: () => void }) {
     <>
       <PerspectiveCamera makeDefault position={[0, 1.5, 4]} fov={50} near={0.01} far={100} />
       <StudioLighting />
-      <Environment preset="studio" environmentIntensity={0.8} />
+      <Environment preset="studio" environmentIntensity={0.4} />
 
       {/* Scroll velocity — runs every frame, feeds store */}
       <ScrollVelocityTracker store={store} />
 
       {/* Root group for hero-section rotation */}
-      <group ref={rootRef} position={[0, 0.3, 0]}>
+      <group ref={rootRef} position={[0, 0.3, 0]} rotation={[0.15, 0, 0]}>
         <WatchExploded store={store} />
         <GearKinematics store={store} />
       </group>

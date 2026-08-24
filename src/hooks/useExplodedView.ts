@@ -23,39 +23,49 @@ interface ExplodedRefs {
 
 export function useExplodedView(refs: ExplodedRefs) {
   useEffect(() => {
+    // Reset all positions before GSAP initializes
+    const reset = () => {
+      refs.crystalRef.current  && (refs.crystalRef.current.position.z  = 0, refs.crystalRef.current.rotation.x  = 0)
+      refs.dialRef.current     && (refs.dialRef.current.position.z      = 0, refs.dialRef.current.rotation.y      = 0)
+      refs.handsRef.current    && (refs.handsRef.current.position.z     = 0, refs.handsRef.current.rotation.y     = 0)
+      refs.bridgesRef.current  && (refs.bridgesRef.current.position.z   = 0, refs.bridgesRef.current.rotation.y   = 0)
+      refs.casebackRef.current && (refs.casebackRef.current.position.z  = 0, refs.casebackRef.current.rotation.x  = 0)
+    }
+    reset()
+
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: '#movement',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1,
-          onUpdate: (self) => {
-            refs.store.current.explodeProgress = self.progress
-          },
+        paused: true,
+        onUpdate: function() {
+          refs.store.current.explodeProgress = this.progress()
         },
       })
 
-      if (refs.crystalRef.current) {
-        tl.to(refs.crystalRef.current.position,  { z: 2.8,  immediateRender: false },  0)
-        tl.to(refs.crystalRef.current.rotation,  { x: 0.1,  immediateRender: false },  0)
-      }
-      if (refs.dialRef.current) {
-        tl.to(refs.dialRef.current.position,  { z: 1.4,   immediateRender: false },  0)
-        tl.to(refs.dialRef.current.rotation,  { y: -0.15, immediateRender: false },  0)
-      }
-      if (refs.handsRef.current) {
-        tl.to(refs.handsRef.current.position,  { z: 0.6,  immediateRender: false },  0)
-        tl.to(refs.handsRef.current.rotation,  { y: 0.05, immediateRender: false },  0)
-      }
-      if (refs.bridgesRef.current) {
-        tl.to(refs.bridgesRef.current.position,  { z: -1.2, immediateRender: false },  0)
-        tl.to(refs.bridgesRef.current.rotation,  { y: 0.2,  immediateRender: false },  0)
-      }
-      if (refs.casebackRef.current) {
-        tl.to(refs.casebackRef.current.position,  { z: -2.5,  immediateRender: false },  0)
-        tl.to(refs.casebackRef.current.rotation,  { x: -0.1,  immediateRender: false },  0)
-      }
+      refs.crystalRef.current  && tl.fromTo(refs.crystalRef.current.position,  { z: 0 }, { z: 2.8  }, 0)
+      refs.crystalRef.current  && tl.fromTo(refs.crystalRef.current.rotation,  { x: 0 }, { x: 0.1  }, 0)
+      refs.dialRef.current     && tl.fromTo(refs.dialRef.current.position,     { z: 0 }, { z: 1.4  }, 0)
+      refs.dialRef.current     && tl.fromTo(refs.dialRef.current.rotation,     { y: 0 }, { y: -0.15}, 0)
+      refs.handsRef.current    && tl.fromTo(refs.handsRef.current.position,    { z: 0 }, { z: 0.6  }, 0)
+      refs.handsRef.current    && tl.fromTo(refs.handsRef.current.rotation,    { y: 0 }, { y: 0.05 }, 0)
+      refs.bridgesRef.current  && tl.fromTo(refs.bridgesRef.current.position,  { z: 0 }, { z: -1.2 }, 0)
+      refs.bridgesRef.current  && tl.fromTo(refs.bridgesRef.current.rotation,  { y: 0 }, { y: 0.2  }, 0)
+      refs.casebackRef.current && tl.fromTo(refs.casebackRef.current.position, { z: 0 }, { z: -2.5 }, 0)
+      refs.casebackRef.current && tl.fromTo(refs.casebackRef.current.rotation, { x: 0 }, { x: -0.1 }, 0)
+
+      ScrollTrigger.create({
+        trigger: '#movement',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: 1,
+        onUpdate: (self) => {
+          tl.progress(self.progress)
+          refs.store.current.explodeProgress = self.progress
+        },
+        onLeaveBack: () => {
+          reset()
+          refs.store.current.explodeProgress = 0
+        },
+      })
     })
 
     return () => ctx.revert()
