@@ -236,7 +236,7 @@ function MovementSection() {
             marginBottom: 'var(--sp-10)',
           }}
         >
-          Scroll to disassemble [CALIBRE NUMBER] into its [N] constituent
+          Scroll to disassemble Calibre 01 into its 5 constituent
           components. Each part occupies its exact functional position — there
           is no aesthetic arrangement.
         </p>
@@ -253,9 +253,9 @@ function MovementSection() {
           aria-label="Movement specifications"
         >
           {[
-            { label: 'Jewels',       value: '[N] J',    id: 'spec-jewels'     },
-            { label: 'Frequency',    value: '[N] Hz',   id: 'spec-frequency'  },
-            { label: 'Power reserve', value: '[N] h',   id: 'spec-reserve'    },
+            { label: 'Jewels',       value: '27 J',     id: 'spec-jewels'     },
+            { label: 'Frequency',    value: '4 Hz',     id: 'spec-frequency'  },
+            { label: 'Power reserve', value: '72 h',    id: 'spec-reserve'    },
           ].map(({ label, value, id }) => (
             <div key={id} role="listitem" style={{ borderTop: '1px solid rgba(212,175,55,0.15)', paddingTop: 'var(--sp-5)' }}>
               <p className="spec-label" id={id} style={{ marginBottom: 'var(--sp-2)' }}>
@@ -334,7 +334,7 @@ function CraftsmanshipSection() {
               Each bridge and plate receives Côtes de Genève stripes applied by
               hand, then anglage — the chamfering of every visible edge under
               40× magnification — before a final hand-polishing pass that takes
-              a skilled finisher approximately [N] hours per movement.
+              a skilled finisher approximately 120 hours per movement.
             </p>
 
             {/* Finishing technique list */}
@@ -387,21 +387,21 @@ function CraftsmanshipSection() {
 function SpecsSection() {
   const specs = [
     { label: 'Reference',         value: 'CA-[REFERENCE]',      id: 'ref-number'    },
-    { label: 'Calibre',           value: '[CALIBRE NUMBER]',    id: 'calibre'       },
+    { label: 'Calibre',           value: 'CA-01',               id: 'calibre'       },
     { label: 'Movement type',     value: 'Mechanical, manual',  id: 'mv-type'       },
-    { label: 'Frequency',         value: '[N],000 vph / [N] Hz',id: 'frequency'     },
-    { label: 'Power reserve',     value: '[N] hours',           id: 'power-reserve' },
-    { label: 'Jewels',            value: '[N] jewels',          id: 'jewels'        },
-    { label: 'Components',        value: '[N] parts',           id: 'components'    },
+    { label: 'Frequency',         value: '28,800 vph / 4 Hz',   id: 'frequency'     },
+    { label: 'Power reserve',     value: '72 hours',            id: 'power-reserve' },
+    { label: 'Jewels',            value: '27 jewels',           id: 'jewels'        },
+    { label: 'Components',        value: '312 parts',           id: 'components'    },
     { label: 'Balance wheel',     value: '[TYPE]',              id: 'balance'       },
     { label: 'Escapement',        value: '[TYPE]',              id: 'escapement'    },
     { label: 'Case material',     value: 'Rose gold 18k',       id: 'case-mat'      },
     { label: 'Case diameter',     value: '[Nmm]',               id: 'diameter'      },
     { label: 'Case height',       value: '[N.N mm]',            id: 'height'        },
     { label: 'Crystal',           value: 'Sapphire, double AR', id: 'crystal'       },
-    { label: 'Water resistance',  value: '[N] m / [N] ATM',     id: 'water'         },
+    { label: 'Water resistance',  value: '50 m / 5 ATM',        id: 'water'         },
     { label: 'Strap',             value: '[MATERIAL], [CLASP]', id: 'strap'         },
-    { label: 'Limited edition',   value: '[N] pieces',          id: 'edition'       },
+    { label: 'Limited edition',   value: '50 pieces',           id: 'edition'       },
   ]
 
   return (
@@ -565,9 +565,9 @@ function ReserveSection() {
                 lineHeight: 1.8,
               }}
             >
-              Production: [N] pieces per annum
+              Production: 50 pieces per annum
               <br />
-              Current waitlist: [N] months
+              Current waitlist: 18 months
               <br />
               Price available upon private inquiry
             </p>
