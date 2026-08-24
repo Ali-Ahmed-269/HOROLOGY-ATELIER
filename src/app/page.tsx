@@ -692,6 +692,36 @@ export default function Home() {
 
       {/* Fixed WebGL canvas — z-index 0, pointer-events none */}
       <SceneCanvas onReady={handleCanvasReady} />
+      <div id="hud-overlay" style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 15,
+        pointerEvents: 'none',
+      }}>
+        {([
+          { id: 'caseback', label: 'MAINSPRING BARREL',      spec: '72-Hour Power Reserve',        top: '65%', left: '72%' },
+          { id: 'bridges',  label: 'MOVEMENT ARCHITECTURE',  spec: 'Geneva Stripes · Blued Screws', top: '55%', left: '72%' },
+          { id: 'dial',     label: 'DIAL & HOUR MARKERS',    spec: 'Applied Indices · Rose Gold',   top: '45%', left: '72%' },
+          { id: 'crystal',  label: 'SAPPHIRE CRYSTAL',       spec: 'AR Coated · 1.77 IOR',          top: '35%', left: '72%' },
+        ] as const).map(({ id, label, spec, top, left }) => (
+          <div
+            key={id}
+            id={`hud-${id}`}
+            className="hud-callout"
+            style={{
+              position: 'absolute',
+              top,
+              left,
+              opacity: 0,
+              transition: 'opacity 0.3s ease',
+              pointerEvents: 'none',
+            }}
+          >
+            <span className="hud-label">{label}</span>
+            <span className="hud-spec">{spec}</span>
+          </div>
+        ))}
+      </div>
 
       {/* Scrollable HTML overlay — z-index 10 */}
       <div

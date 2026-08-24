@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import type { ThreeEvent } from '@react-three/fiber'
 import { PerspectiveCamera, Environment, Preload } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Bloom, Vignette } from '@react-three/postprocessing'
 import { DepthOfFieldEffect } from 'postprocessing'
@@ -188,26 +189,75 @@ const markerGeos = Array.from({ length: 12 }).map((_, i) => {
 
 function WatchExploded({ store }: WatchExplodedProps) {
   /* ── Group refs — one per layer ─────────────────── */
-  const casebackRef  = useRef<THREE.Group>(null) // layer 0
-  const bridgesRef   = useRef<THREE.Group>(null) // layer 1
-  const dialRef      = useRef<THREE.Group>(null) // layer 2 (pivot)
-  const handsRef     = useRef<THREE.Group>(null) // layer 3
-  const crystalRef   = useRef<THREE.Group>(null) // layer 4
+  const casebackRef = useRef<THREE.Group>(null) // layer 0
+  const bridgesRef = useRef<THREE.Group>(null) // layer 1
+  const dialRef = useRef<THREE.Group>(null) // layer 2 (pivot)
+  const handsRef = useRef<THREE.Group>(null) // layer 3
+  const crystalRef = useRef<THREE.Group>(null) // layer 4
 
-  useExplodedView({ crystalRef, dialRef, handsRef, bridgesRef, casebackRef })
+  /* ── Hover target refs — one primary mesh per layer ── */
+  const hoverCaseRef = useRef<THREE.Mesh>(null)
+  const hoverBridgeRef = useRef<THREE.Mesh>(null)
+  const hoverDialRef = useRef<THREE.Mesh>(null)
+  const hoverCrystalRef = useRef<THREE.Mesh>(null)
+
+  /* ── Per-instance hover materials (cloned so mutation is isolated) ── */
+  const caseHoverMat = useMemo(() => roseGoldMat.clone(), [])
+  const bridgeHoverMat = useMemo(() => platinumMat.clone(), [])
+  const dialHoverMat = useMemo(() => dialMat.clone(), [])
+  const crystalHoverMat = useMemo(() => crystalMat.clone(), [])
+
+  /* ── Hover state ref — no re-renders ── */
+  const hoveredLayer = useRef<string | null>(null)
+
+  /* ── DOM HUD helper — reads overlay divs from page.tsx ── */
+  const getHudEl = (id: string) =>
+    typeof document !== 'undefined'
+      ? document.getElementById(`hud-${id}`) as HTMLDivElement | null
+      : null
+
+  useExplodedView({ crystalRef, dialRef, handsRef, bridgesRef, casebackRef, store })
+
+  const handlePointerOver = (
+    layerName: string,
+    mat: THREE.MeshPhysicalMaterial | THREE.MeshStandardMaterial
+  ) => (e: ThreeEvent<PointerEvent>) => {
+    if (store.current.explodeProgress < 0.15) return
+    e.stopPropagation()
+    hoveredLayer.current = layerName
+    mat.emissive.setHex(0xD4AF37)
+    mat.emissiveIntensity = 0.25
+    document.body.style.cursor = 'pointer'
+    const hud = getHudEl(layerName)
+    if (hud) hud.style.opacity = '1'
+  }
+
+  const handlePointerOut = (
+    layerName: string,
+    mat: THREE.MeshPhysicalMaterial | THREE.MeshStandardMaterial
+  ) => () => {
+    mat.emissive.setHex(0x000000)
+    mat.emissiveIntensity = 0
+    if (hoveredLayer.current === layerName) {
+      hoveredLayer.current = null
+      document.body.style.cursor = 'auto'
+    }
+    const hud = getHudEl(layerName)
+    if (hud) hud.style.opacity = '0'
+  }
 
   /* ── Geometry: 12 hour marker positions (memoised) ── */
   const markerPositions = useMemo(() =>
     Array.from({ length: 12 }).map((_, i) => {
       const angle = (i / 12) * Math.PI * 2
       return {
-        pos:   [Math.sin(angle) * 0.78, 0.195, Math.cos(angle) * 0.78] as [number, number, number],
-        rot:   [0, -angle, 0] as [number, number, number],
-        geo:   markerGeos[i],
+        pos: [Math.sin(angle) * 0.78, 0.195, Math.cos(angle) * 0.78] as [number, number, number],
+        rot: [0, -angle, 0] as [number, number, number],
+        geo: markerGeos[i],
         large: i % 3 === 0,
       }
     }),
-  [])
+    [])
 
   return (
     /* Root group — idle Y rotation applied here so all layers share it */
@@ -216,7 +266,13 @@ function WatchExploded({ store }: WatchExplodedProps) {
       {/* ── Layer 0: Caseback / barrel (deepest) ──── */}
       <group ref={casebackRef}>
         {/* Outer case — rose gold */}
-        <mesh castShadow receiveShadow material={roseGoldMat}>
+        <mesh
+          ref={hoverCaseRef}
+          castShadow receiveShadow
+          material={caseHoverMat}
+          onPointerOver={handlePointerOver('caseback', caseHoverMat)}
+          onPointerOut={handlePointerOut('caseback', caseHoverMat)}
+        >
           <cylinderGeometry args={[1.1, 1.1, 0.35, 64]} />
         </mesh>
         {/* Crown */}
@@ -232,7 +288,13 @@ function WatchExploded({ store }: WatchExplodedProps) {
       {/* ── Layer 1: Bridges & jewels ─────────────── */}
       <group ref={bridgesRef}>
         {/* Main plate */}
-        <mesh position={[0, 0.06, 0]} material={platinumMat}>
+        <mesh
+          ref={hoverBridgeRef}
+          position={[0, 0.06, 0]}
+          material={bridgeHoverMat}
+          onPointerOver={handlePointerOver('bridges', bridgeHoverMat)}
+          onPointerOut={handlePointerOut('bridges', bridgeHoverMat)}
+        >
           <cylinderGeometry args={[0.90, 0.90, 0.04, 64]} />
         </mesh>
         {/* Centre bridge */}
@@ -249,12 +311,12 @@ function WatchExploded({ store }: WatchExplodedProps) {
         </mesh>
         {/* Blued screws — 6 positions */}
         {[
-          [ 0.55,  0.115,  0.30],
-          [-0.55,  0.115,  0.30],
-          [ 0.55,  0.115, -0.30],
-          [-0.55,  0.115, -0.30],
-          [ 0.00,  0.115,  0.62],
-          [ 0.00,  0.115, -0.62],
+          [0.55, 0.115, 0.30],
+          [-0.55, 0.115, 0.30],
+          [0.55, 0.115, -0.30],
+          [-0.55, 0.115, -0.30],
+          [0.00, 0.115, 0.62],
+          [0.00, 0.115, -0.62],
         ].map((pos, i) => (
           <mesh key={i} position={pos as [number, number, number]} material={bluedSteelMat}>
             <cylinderGeometry args={[0.028, 0.028, 0.018, 12]} />
@@ -269,7 +331,14 @@ function WatchExploded({ store }: WatchExplodedProps) {
       {/* ── Layer 2: Dial & hour markers (pivot) ─── */}
       <group ref={dialRef}>
         {/* Dial face */}
-        <mesh position={[0, 0.18, 0]} castShadow material={dialMat}>
+        <mesh
+          ref={hoverDialRef}
+          position={[0, 0.18, 0]}
+          castShadow
+          material={dialHoverMat}
+          onPointerOver={handlePointerOver('dial', dialHoverMat)}
+          onPointerOut={handlePointerOut('dial', dialHoverMat)}
+        >
           <cylinderGeometry args={[0.98, 0.98, 0.02, 64]} />
         </mesh>
         {/* Hour markers */}
@@ -300,7 +369,13 @@ function WatchExploded({ store }: WatchExplodedProps) {
 
       {/* ── Layer 4: Sapphire crystal (shallowest) ── */}
       <group ref={crystalRef}>
-        <mesh position={[0, 0.22, 0]} material={crystalMat}>
+        <mesh
+          ref={hoverCrystalRef}
+          position={[0, 0.22, 0]}
+          material={crystalHoverMat}
+          onPointerOver={handlePointerOver('crystal', crystalHoverMat)}
+          onPointerOut={handlePointerOut('crystal', crystalHoverMat)}
+        >
           <cylinderGeometry args={[0.96, 0.96, 0.04, 64]} />
         </mesh>
       </group>
@@ -337,11 +412,11 @@ const GEAR_CHAIN = (() => {
   // Each entry: [cumulativeRatio, direction, xOffset, radius]
   // Direction: 1 = CW from above (positive Y rotation), -1 = CCW
   return [
-    { ratio: r.mainspring_to_barrel,                                         dir:  1, x:  0.00, r: 0.50 }, // barrel
-    { ratio: r.mainspring_to_barrel * r.barrel_to_centre,                    dir: -1, x:  0.54, r: 0.22 }, // centre wheel
-    { ratio: r.mainspring_to_barrel * r.barrel_to_centre * r.centre_to_third, dir:  1, x:  0.28, r: 0.14 }, // third wheel
-    { ratio: r.mainspring_to_barrel * r.barrel_to_centre * r.centre_to_third * r.third_to_fourth,    dir: -1, x: -0.20, r: 0.10 }, // fourth
-    { ratio: r.mainspring_to_barrel * r.barrel_to_centre * r.centre_to_third * r.third_to_fourth * r.fourth_to_escape, dir:  1, x: -0.38, r: 0.08 }, // escape
+    { ratio: r.mainspring_to_barrel, dir: 1, x: 0.00, r: 0.50 }, // barrel
+    { ratio: r.mainspring_to_barrel * r.barrel_to_centre, dir: -1, x: 0.54, r: 0.22 }, // centre wheel
+    { ratio: r.mainspring_to_barrel * r.barrel_to_centre * r.centre_to_third, dir: 1, x: 0.28, r: 0.14 }, // third wheel
+    { ratio: r.mainspring_to_barrel * r.barrel_to_centre * r.centre_to_third * r.third_to_fourth, dir: -1, x: -0.20, r: 0.10 }, // fourth
+    { ratio: r.mainspring_to_barrel * r.barrel_to_centre * r.centre_to_third * r.third_to_fourth * r.fourth_to_escape, dir: 1, x: -0.38, r: 0.08 }, // escape
   ]
 })()
 
@@ -349,13 +424,13 @@ const GEAR_CHAIN = (() => {
 const GEAR_ROT_RATIOS = [1.0, -0.125, 0.125, -0.125, 0.125]
 
 function GearKinematics({ store }: GearKinematicsProps) {
-  const groupRef  = useRef<THREE.Group>(null)
-  const gearRefs  = useRef<THREE.Mesh[]>([])
+  const groupRef = useRef<THREE.Group>(null)
+  const gearRefs = useRef<THREE.Mesh[]>([])
 
   /** Tooth-mark geometry — shared flat cylinder per gear, created once */
   const gearGeos = useMemo(() =>
     GEAR_CHAIN.map(g => new THREE.CylinderGeometry(g.r, g.r, 0.022, Math.round(g.r * 80 + 12))),
-  [])
+    [])
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
@@ -374,7 +449,7 @@ function GearKinematics({ store }: GearKinematicsProps) {
       if ((obj as THREE.Mesh).isMesh) {
         const mat = (obj as THREE.Mesh).material as THREE.MeshPhysicalMaterial
         if (mat.opacity !== undefined) {
-          mat.opacity  = Math.max(opacity, 0)
+          mat.opacity = Math.max(opacity, 0)
           mat.transparent = true
         }
       }
@@ -408,11 +483,11 @@ function GearKinematics({ store }: GearKinematicsProps) {
    ───────────────────────────────────────────────────────────── */
 function ScrollVelocityTracker({ store }: { store: React.MutableRefObject<SceneStore> }) {
   useFrame(() => {
-    const y   = window.scrollY
+    const y = window.scrollY
     const vel = y - store.current.scrollY
     // Exponential moving average for smooth deceleration
     store.current.scrollVelocity = store.current.scrollVelocity * 0.82 + vel * 0.18
-    store.current.scrollY        = y
+    store.current.scrollY = y
   })
   return null
 }
@@ -425,15 +500,15 @@ function ScrollVelocityTracker({ store }: { store: React.MutableRefObject<SceneS
 function HeroScrollTrigger({ rootRef }: { rootRef: React.RefObject<THREE.Group | null> }) {
   useEffect(() => {
     const cfg = SECTION_CONFIGS.hero
-    const el  = document.getElementById(cfg.id)
+    const el = document.getElementById(cfg.id)
     if (!el || !rootRef.current) return
 
     const proxy = { rot: 0 }
     const st = ScrollTrigger.create({
       trigger: el,
-      start:   cfg.triggerStart,
-      end:     cfg.triggerEnd,
-      scrub:   cfg.scrub,
+      start: cfg.triggerStart,
+      end: cfg.triggerEnd,
+      scrub: cfg.scrub,
       onUpdate: (self) => {
         if (rootRef.current) {
           rootRef.current.rotation.y = self.progress * (cfg.rotationPerPx * 600)
@@ -454,15 +529,15 @@ function HeroScrollTrigger({ rootRef }: { rootRef: React.RefObject<THREE.Group |
 function SceneRoot({ onReady }: { onReady?: () => void }) {
   const { gl, camera } = useThree()
   const rootRef = useRef<THREE.Group>(null)
-  const dofRef  = useRef<DepthOfFieldEffect>(null)
-  const cameraTarget     = useRef(new THREE.Vector3(0, 0, 5))
+  const dofRef = useRef<DepthOfFieldEffect>(null)
+  const cameraTarget = useRef(new THREE.Vector3(0, 1.5, 4))
   const targetFocusDistance = useRef(0.02)
 
   /** Mutable store — written by tracker, read by kinematics/explode */
   const store = useRef<SceneStore>({
     explodeProgress: 0,
-    scrollVelocity:  0,
-    scrollY:         typeof window !== 'undefined' ? window.scrollY : 0,
+    scrollVelocity: 0,
+    scrollY: typeof window !== 'undefined' ? window.scrollY : 0,
   })
 
   useEffect(() => {
@@ -480,28 +555,28 @@ function SceneRoot({ onReady }: { onReady?: () => void }) {
         trigger: '#hero',
         start: 'top top',
         end: 'bottom top',
-        onEnter:     () => setCamera(0, 0, 5, 0.02),
-        onEnterBack: () => setCamera(0, 0, 5, 0.02),
+        onEnter: () => setCamera(0, 1.5, 4, 0.02),
+        onEnterBack: () => setCamera(0, 1.5, 4, 0.02),
       }),
       ScrollTrigger.create({
         trigger: '#movement',
         start: 'top top',
         end: 'bottom top',
-        onEnter:     () => setCamera(0.3, 0.1, 2.2, 0.008),
+        onEnter: () => setCamera(0.3, 0.1, 2.2, 0.008),
         onEnterBack: () => setCamera(0.3, 0.1, 2.2, 0.008),
       }),
       ScrollTrigger.create({
         trigger: '#craftsmanship',
         start: 'top top',
         end: 'bottom top',
-        onEnter:     () => setCamera(0, 0.2, 3.5, 0.015),
+        onEnter: () => setCamera(0, 0.2, 3.5, 0.015),
         onEnterBack: () => setCamera(0, 0.2, 3.5, 0.015),
       }),
       ScrollTrigger.create({
         trigger: '#specs',
         start: 'top top',
         end: 'bottom top',
-        onEnter:     () => setCamera(-0.2, -0.1, 2.0, 0.006),
+        onEnter: () => setCamera(-0.2, -0.1, 2.0, 0.006),
         onEnterBack: () => setCamera(-0.2, -0.1, 2.0, 0.006),
       }),
     ]
@@ -525,7 +600,7 @@ function SceneRoot({ onReady }: { onReady?: () => void }) {
 
   return (
     <>
-      <PerspectiveCamera makeDefault position={[0, 0, 6]} fov={45} near={0.01} far={100} />
+      <PerspectiveCamera makeDefault position={[0, 1.5, 4]} fov={50} near={0.01} far={100} />
       <StudioLighting />
       <Environment preset="studio" environmentIntensity={0.8} />
 
@@ -609,7 +684,7 @@ export default function SceneCanvas({ onReady }: SceneCanvasProps) {
     <div
       aria-label="Interactive 3D view of CHRONOS ATELIER timepiece — scroll to disassemble the movement"
       role="img"
-      style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'auto' }}
     >
       <Canvas
         gl={{
@@ -622,6 +697,10 @@ export default function SceneCanvas({ onReady }: SceneCanvasProps) {
         camera={{ position: [0, 0, 6], fov: 45, near: 0.01, far: 100 }}
         style={{ background: '#0A0A0C' }}
         frameloop="always"
+        eventSource={typeof document !== 'undefined'
+          ? document.documentElement
+          : undefined}
+        eventPrefix="client"
         onCreated={({ gl: r3fGl }) => {
           // Configure shadows & tone mapping directly after context creation
           r3fGl.shadowMap.enabled = true

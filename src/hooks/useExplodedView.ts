@@ -6,12 +6,19 @@ import type * as THREE from 'three'
 
 gsap.registerPlugin(ScrollTrigger)
 
+interface SceneStore {
+  explodeProgress: number
+  scrollVelocity: number
+  scrollY: number
+}
+
 interface ExplodedRefs {
   crystalRef:  React.RefObject<THREE.Group>
   dialRef:     React.RefObject<THREE.Group>
   handsRef:    React.RefObject<THREE.Group>
   bridgesRef:  React.RefObject<THREE.Group>
   casebackRef: React.RefObject<THREE.Group>
+  store:       React.MutableRefObject<SceneStore>
 }
 
 export function useExplodedView(refs: ExplodedRefs) {
@@ -23,6 +30,9 @@ export function useExplodedView(refs: ExplodedRefs) {
           start: 'top top',
           end: 'bottom top',
           scrub: 1,
+          onUpdate: (self) => {
+            refs.store.current.explodeProgress = self.progress
+          },
         },
       })
 
