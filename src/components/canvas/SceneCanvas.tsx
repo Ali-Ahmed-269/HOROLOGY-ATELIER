@@ -93,7 +93,7 @@ function PostStack({ dofRef }: PostStackProps) {
 
   return (
     <EffectComposer multisampling={4}>
-      <DepthOfField ref={dofRef} focusDistance={0.02} focalLength={0.15} bokehScale={3} height={480} />
+      <DepthOfField ref={dofRef} focusDistance={0.015} focalLength={0.05} bokehScale={1.5} height={480} />
       <Bloom luminanceThreshold={0.85} luminanceSmoothing={0.4} intensity={0.15} mipmapBlur />
       <Vignette offset={0.4} darkness={0.7} eskil={false} />
     </EffectComposer>
@@ -138,10 +138,10 @@ const handMat = new THREE.MeshStandardMaterial({
 })
 
 const dialMat = new THREE.MeshPhysicalMaterial({
-  color: new THREE.Color('#C8C0B0'),
-  metalness: 0.02,
-  roughness: 0.95,
-  envMapIntensity: 0.05,
+  color: new THREE.Color('#D8D0C0'),
+  metalness: 0.0,
+  roughness: 1.0,
+  envMapIntensity: 0.0,
 })
 
 const crystalMat = new THREE.MeshPhysicalMaterial({
@@ -715,7 +715,7 @@ export default function SceneCanvas({ onReady }: SceneCanvasProps) {
           r3fGl.shadowMap.enabled = true
           r3fGl.shadowMap.type = THREE.PCFShadowMap
           r3fGl.toneMapping = THREE.ACESFilmicToneMapping
-          r3fGl.toneMappingExposure = 1.1
+          r3fGl.toneMappingExposure = 0.85
 
           const canvasEl = r3fGl.domElement
           if (canvasEl && typeof canvasEl.addEventListener === 'function') {
