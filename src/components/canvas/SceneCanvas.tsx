@@ -608,7 +608,7 @@ function SceneRoot({ onReady }: { onReady?: () => void }) {
       <ScrollVelocityTracker store={store} />
 
       {/* Root group for hero-section rotation */}
-      <group ref={rootRef}>
+      <group ref={rootRef} position={[0, 0.3, 0]}>
         <WatchExploded store={store} />
         <GearKinematics store={store} />
       </group>

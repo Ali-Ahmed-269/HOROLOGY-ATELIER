@@ -37,24 +37,24 @@ export function useExplodedView(refs: ExplodedRefs) {
       })
 
       if (refs.crystalRef.current) {
-        tl.to(refs.crystalRef.current.position,  { z: 2.8 },  0)
-        tl.to(refs.crystalRef.current.rotation,  { x: 0.1 },  0)
+        tl.to(refs.crystalRef.current.position,  { z: 2.8,  immediateRender: false },  0)
+        tl.to(refs.crystalRef.current.rotation,  { x: 0.1,  immediateRender: false },  0)
       }
       if (refs.dialRef.current) {
-        tl.to(refs.dialRef.current.position,  { z: 1.4 },   0)
-        tl.to(refs.dialRef.current.rotation,  { y: -0.15 }, 0)
+        tl.to(refs.dialRef.current.position,  { z: 1.4,   immediateRender: false },  0)
+        tl.to(refs.dialRef.current.rotation,  { y: -0.15, immediateRender: false },  0)
       }
       if (refs.handsRef.current) {
-        tl.to(refs.handsRef.current.position,  { z: 0.6 },  0)
-        tl.to(refs.handsRef.current.rotation,  { y: 0.05 }, 0)
+        tl.to(refs.handsRef.current.position,  { z: 0.6,  immediateRender: false },  0)
+        tl.to(refs.handsRef.current.rotation,  { y: 0.05, immediateRender: false },  0)
       }
       if (refs.bridgesRef.current) {
-        tl.to(refs.bridgesRef.current.position,  { z: -1.2 }, 0)
-        tl.to(refs.bridgesRef.current.rotation,  { y: 0.2 },  0)
+        tl.to(refs.bridgesRef.current.position,  { z: -1.2, immediateRender: false },  0)
+        tl.to(refs.bridgesRef.current.rotation,  { y: 0.2,  immediateRender: false },  0)
       }
       if (refs.casebackRef.current) {
-        tl.to(refs.casebackRef.current.position,  { z: -2.5 },  0)
-        tl.to(refs.casebackRef.current.rotation,  { x: -0.1 }, 0)
+        tl.to(refs.casebackRef.current.position,  { z: -2.5,  immediateRender: false },  0)
+        tl.to(refs.casebackRef.current.rotation,  { x: -0.1,  immediateRender: false },  0)
       }
     })
 
