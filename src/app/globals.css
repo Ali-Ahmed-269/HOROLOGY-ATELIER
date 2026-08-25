@@ -454,6 +454,30 @@ body {
     ) !important;
   }
 
+  /* Prevent horizontal overflow on mobile */
+  body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
+  * {
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+  }
+
+  /* Fix text containers */
+  .section-inner {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Fix section width */
+  .section-atelier {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
   /* Hero typography scale */
   .section-atelier h1,
   .section-atelier .hero-headline {
