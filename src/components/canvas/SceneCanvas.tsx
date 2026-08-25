@@ -70,7 +70,7 @@ function StudioLighting() {
    DepthOfField | Bloom (specular only) | Vignette (persistent)
    ───────────────────────────────────────────────────────────── */
 interface PostStackProps {
-  dofRef?: React.RefObject<DepthOfFieldEffect>
+  dofRef?: React.RefObject<DepthOfFieldEffect | null>
 }
 
 function PostStack({ dofRef }: PostStackProps) {
@@ -220,7 +220,14 @@ function WatchExploded({ store }: WatchExplodedProps) {
       ? document.getElementById(`hud-${id}`) as HTMLDivElement | null
       : null
 
-  useExplodedView({ crystalRef, dialRef, handsRef, bridgesRef, casebackRef, store })
+  useExplodedView({
+    crystalRef:  crystalRef  as React.RefObject<THREE.Group>,
+    dialRef:     dialRef     as React.RefObject<THREE.Group>,
+    handsRef:    handsRef    as React.RefObject<THREE.Group>,
+    bridgesRef:  bridgesRef  as React.RefObject<THREE.Group>,
+    casebackRef: casebackRef as React.RefObject<THREE.Group>,
+    store,
+  })
 
   const handlePointerOver = (
     layerName: string,
@@ -460,7 +467,7 @@ function GearKinematics({ store }: GearKinematicsProps) {
   useFrame((_, delta) => {
     if (!groupRef.current) return
 
-    const velocity = (window as Window & { lenis?: { velocity: number } }).lenis?.velocity ?? 0
+    const velocity = (window as unknown as { lenis?: { velocity: number } }).lenis?.velocity ?? 0
 
     gearRefs.current.forEach((mesh, i) => {
       if (!mesh) return
@@ -548,7 +555,7 @@ function HeroScrollTrigger({ rootRef }: { rootRef: React.RefObject<THREE.Group |
 function SceneRoot({ onReady }: { onReady?: () => void }) {
   const { gl, camera } = useThree()
   const rootRef = useRef<THREE.Group>(null)
-  const dofRef = useRef<DepthOfFieldEffect>(null)
+  const dofRef = useRef<DepthOfFieldEffect | null>(null)
   const cameraTarget = useRef(new THREE.Vector3(0, 1.5, 4))
   const targetFocusDistance = useRef(0.02)
 

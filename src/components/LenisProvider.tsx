@@ -89,13 +89,13 @@ export default function LenisProvider({
     gsap.ticker.lagSmoothing(0) // Lenis handles lag; GSAP compensation off
 
     /* ── Expose on window for R3F useFrame sync ──────── */
-    ;(window as Window & { lenis?: Lenis }).lenis = lenis
+    ;(window as unknown as { lenis?: Lenis }).lenis = lenis
 
     return () => {
       gsap.ticker.remove(onTick)
       lenis.destroy()
       lenisRef.current = null
-      delete (window as Window & { lenis?: Lenis }).lenis
+      ;(window as unknown as { lenis?: Lenis }).lenis = undefined
     }
   }, [])
 
