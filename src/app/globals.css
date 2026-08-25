@@ -435,3 +435,54 @@ body {
   color: var(--color-platinum-mid);
   text-transform: uppercase;
 }
+
+@media (max-width: 768px) {
+  /* Canvas stays full-screen — watch IS the experience */
+  .canvas-container {
+    opacity: 1 !important;
+  }
+
+  /* Text sections get dark backdrop so they read over the watch */
+  .section-atelier {
+    padding-left: var(--sp-5) !important;
+    padding-right: var(--sp-5) !important;
+    background: linear-gradient(
+      to right,
+      rgba(10, 10, 12, 0.85) 0%,
+      rgba(10, 10, 12, 0.6) 70%,
+      transparent 100%
+    ) !important;
+  }
+
+  /* Hero typography scale */
+  .section-atelier h1,
+  .section-atelier .hero-headline {
+    font-size: clamp(2.5rem, 10vw, 5rem) !important;
+  }
+
+  /* Nav — tighter spacing */
+  .nav-bar {
+    padding: 0 var(--sp-4) !important;
+    gap: var(--sp-4) !important;
+    background: rgba(10, 10, 12, 0.9) !important;
+  }
+
+  .nav-links {
+    gap: var(--sp-3) !important;
+  }
+
+  .nav-link {
+    font-size: 0.6rem !important;
+  }
+
+  /* HUD labels — hide on mobile */
+  #hud-overlay {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-links {
+    display: none !important;
+  }
+}

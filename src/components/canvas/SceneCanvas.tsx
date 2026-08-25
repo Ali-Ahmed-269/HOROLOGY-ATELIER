@@ -703,7 +703,15 @@ export default function SceneCanvas({ onReady }: SceneCanvasProps) {
     <div
       aria-label="Interactive 3D view of CHRONOS ATELIER timepiece — scroll to disassemble the movement"
       role="img"
-      style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'auto' }}
+      className="canvas-container"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches
+          ? 'none'
+          : 'auto'
+      }}
     >
       <Canvas
         gl={{
