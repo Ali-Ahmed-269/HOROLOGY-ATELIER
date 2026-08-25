@@ -236,7 +236,7 @@ function MovementSection() {
             marginBottom: 'var(--sp-10)',
           }}
         >
-          Scroll to disassemble Calibre 01 into its 5 constituent
+          Scroll to disassemble Calibre 01 into its 4 constituent
           components. Each part occupies its exact functional position — there
           is no aesthetic arrangement.
         </p>
@@ -331,8 +331,8 @@ function CraftsmanshipSection() {
                 marginBottom: 'var(--sp-7)',
               }}
             >
-              Each bridge and plate receives Côtes de Genève stripes applied by
-              hand, then anglage — the chamfering of every visible edge under
+              Each bridge and plate receives Geneva Stripes applied by
+              hand, then edge chamfering — the beveling of every visible edge under
               40× magnification — before a final hand-polishing pass that takes
               a skilled finisher approximately 120 hours per movement.
             </p>
@@ -343,8 +343,8 @@ function CraftsmanshipSection() {
               aria-label="Finishing techniques applied"
             >
               {[
-                'Côtes de Genève stripes',
-                'Anglage — hand-chamfered edges',
+                'Geneva Stripes',
+                'Hand-chamfered edges',
                 'Perlage — circular graining on hidden surfaces',
                 'Blued screws — heated to oxidation point',
               ].map((technique, i) => (
@@ -703,6 +703,7 @@ export default function Home() {
           { id: 'bridges',  label: 'MOVEMENT ARCHITECTURE',  spec: 'Geneva Stripes · Blued Screws', top: '55%', left: '72%' },
           { id: 'dial',     label: 'DIAL & HOUR MARKERS',    spec: 'Applied Indices · Rose Gold',   top: '45%', left: '72%' },
           { id: 'crystal',  label: 'SAPPHIRE CRYSTAL',       spec: 'AR Coated · 1.77 IOR',          top: '35%', left: '72%' },
+          { id: 'hands',    label: 'WATCH HANDS',             spec: 'Rhodium-Plated · Rose Gold Seconds', top: '25%', left: '72%' },
         ] as const).map(({ id, label, spec, top, left }) => (
           <div
             key={id}

@@ -140,8 +140,10 @@ const handMat = new THREE.MeshStandardMaterial({
 const dialMat = new THREE.MeshPhysicalMaterial({
   color: new THREE.Color('#D8D0C0'),
   metalness: 0.0,
-  roughness: 1.0,
+  roughness: 0.85,
   envMapIntensity: 0.0,
+  clearcoat: 0.3,
+  clearcoatRoughness: 0.4,
 })
 
 const crystalMat = new THREE.MeshPhysicalMaterial({
@@ -200,12 +202,14 @@ function WatchExploded({ store }: WatchExplodedProps) {
   const hoverBridgeRef = useRef<THREE.Mesh>(null)
   const hoverDialRef = useRef<THREE.Mesh>(null)
   const hoverCrystalRef = useRef<THREE.Mesh>(null)
+  const hoverHandsRef = useRef<THREE.Mesh>(null)
 
   /* ── Per-instance hover materials (cloned so mutation is isolated) ── */
   const caseHoverMat = useMemo(() => roseGoldMat.clone(), [])
   const bridgeHoverMat = useMemo(() => platinumMat.clone(), [])
   const dialHoverMat = useMemo(() => dialMat.clone(), [])
   const crystalHoverMat = useMemo(() => crystalMat.clone(), [])
+  const handsHoverMat = useMemo(() => handMat.clone(), [])
 
   /* ── Hover state ref — no re-renders ── */
   const hoveredLayer = useRef<string | null>(null)
@@ -355,7 +359,13 @@ function WatchExploded({ store }: WatchExplodedProps) {
       <group ref={handsRef}>
         {/* Hour hand — 10 o'clock position, offset so pivot is at center */}
         <group rotation={[0, -Math.PI * 0.17, 0]}>
-          <mesh position={[0, 0.21, -0.16]} material={handMat}>
+          <mesh
+            ref={hoverHandsRef}
+            position={[0, 0.21, -0.16]}
+            material={handsHoverMat}
+            onPointerOver={handlePointerOver('hands', handsHoverMat)}
+            onPointerOut={handlePointerOut('hands', handsHoverMat)}
+          >
             <boxGeometry args={[0.04, 0.006, 0.32]} />
           </mesh>
         </group>
@@ -459,7 +469,7 @@ function GearKinematics({ store }: GearKinematicsProps) {
 
     // Fade gears in/out with explode progress
     const p = store.current.explodeProgress
-    const opacity = Math.min(p * 3, 1) * Math.max(1 - (p - 0.8) * 5, 0)
+    const opacity = Math.min(p * 3, 1)
     gearMats.forEach(mat => {
       mat.opacity = Math.max(opacity, 0)
     })

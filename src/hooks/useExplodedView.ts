@@ -41,15 +41,15 @@ export function useExplodedView(refs: ExplodedRefs) {
         },
       })
 
-      refs.crystalRef.current  && tl.fromTo(refs.crystalRef.current.position,  { z: 0 }, { z: 2.8  }, 0)
+      refs.crystalRef.current  && tl.fromTo(refs.crystalRef.current.position,  { z: 0 }, { z: 3.2  }, 0)
       refs.crystalRef.current  && tl.fromTo(refs.crystalRef.current.rotation,  { x: 0 }, { x: 0.1  }, 0)
-      refs.dialRef.current     && tl.fromTo(refs.dialRef.current.position,     { z: 0 }, { z: 1.4  }, 0)
+      refs.dialRef.current     && tl.fromTo(refs.dialRef.current.position,     { z: 0 }, { z: 1.8  }, 0)
       refs.dialRef.current     && tl.fromTo(refs.dialRef.current.rotation,     { y: 0 }, { y: -0.15}, 0)
-      refs.handsRef.current    && tl.fromTo(refs.handsRef.current.position,    { z: 0 }, { z: 0.6  }, 0)
+      refs.handsRef.current    && tl.fromTo(refs.handsRef.current.position,    { z: 0 }, { z: 0.9  }, 0)
       refs.handsRef.current    && tl.fromTo(refs.handsRef.current.rotation,    { y: 0 }, { y: 0.05 }, 0)
-      refs.bridgesRef.current  && tl.fromTo(refs.bridgesRef.current.position,  { z: 0 }, { z: -1.2 }, 0)
+      refs.bridgesRef.current  && tl.fromTo(refs.bridgesRef.current.position,  { z: 0 }, { z: -1.6 }, 0)
       refs.bridgesRef.current  && tl.fromTo(refs.bridgesRef.current.rotation,  { y: 0 }, { y: 0.2  }, 0)
-      refs.casebackRef.current && tl.fromTo(refs.casebackRef.current.position, { z: 0 }, { z: -2.5 }, 0)
+      refs.casebackRef.current && tl.fromTo(refs.casebackRef.current.position, { z: 0 }, { z: -3.2 }, 0)
       refs.casebackRef.current && tl.fromTo(refs.casebackRef.current.rotation, { x: 0 }, { x: -0.1 }, 0)
 
       ScrollTrigger.create({
