@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import type * as THREE from 'three'
+import { useReducedMotion } from './useReducedMotion'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -22,6 +23,8 @@ interface ExplodedRefs {
 }
 
 export function useExplodedView(refs: ExplodedRefs) {
+  const { reducedMotion } = useReducedMotion()
+
   useEffect(() => {
     // Reset all positions before GSAP initializes
     const reset = () => {
@@ -32,6 +35,12 @@ export function useExplodedView(refs: ExplodedRefs) {
       refs.casebackRef.current && (refs.casebackRef.current.position.z  = 0, refs.casebackRef.current.rotation.x  = 0)
     }
     reset()
+
+    /* ── When motion is reduced: hold assembled state, skip GSAP ── */
+    if (reducedMotion) {
+      refs.store.current.explodeProgress = 0
+      return // no cleanup needed — nothing was created
+    }
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
@@ -69,5 +78,5 @@ export function useExplodedView(refs: ExplodedRefs) {
     })
 
     return () => ctx.revert()
-  }, [])
+  }, [reducedMotion]) // eslint-disable-line react-hooks/exhaustive-deps
 }

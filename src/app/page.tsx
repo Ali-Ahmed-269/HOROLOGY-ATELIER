@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import LenisProvider from '@/components/LenisProvider'
 import LoadingVeil from '@/components/LoadingVeil'
 import { useActiveSection } from '@/hooks/useActiveSection'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
 
 /* ── Dynamic imports for client-only 3D canvas ─────────────────────── */
 const SceneCanvas = dynamic(
@@ -17,6 +18,13 @@ const SceneCanvas = dynamic(
    ───────────────────────────────────────────────────────────── */
 function Navigation() {
   const activeId = useActiveSection()
+  const { reducedMotion, setManualOverride } = useReducedMotion()
+
+  const handleToggle = () => {
+    // Cycle: if currently overridden, check if we should clear it
+    // Simple toggle: flip the effective state and store as manual override
+    setManualOverride(!reducedMotion)
+  }
 
   return (
     <header className="nav-bar" role="banner">
@@ -48,6 +56,62 @@ function Navigation() {
           })}
         </ul>
       </nav>
+
+      {/* Reduce-motion toggle — small accessible icon button */}
+      <button
+        id="nav-reduce-motion"
+        type="button"
+        aria-label="Reduce motion"
+        aria-pressed={reducedMotion}
+        onClick={handleToggle}
+        title={reducedMotion ? 'Motion reduced — click to restore' : 'Click to reduce motion'}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 36,
+          height: 36,
+          background: reducedMotion
+            ? 'rgba(212, 175, 55, 0.12)'
+            : 'transparent',
+          border: `1px solid ${reducedMotion ? 'rgba(212,175,55,0.5)' : 'rgba(212,175,55,0.2)'}`,
+          borderRadius: 0,
+          cursor: 'pointer',
+          color: reducedMotion
+            ? 'var(--color-rose-gold-bright)'
+            : 'var(--color-platinum-dim)',
+          transition:
+            'color 120ms ease, background 120ms ease, border-color 120ms ease',
+          flexShrink: 0,
+        }}
+        onMouseEnter={e => {
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-rose-gold-bright)'
+          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(212,175,55,0.5)'
+        }}
+        onMouseLeave={e => {
+          if (!reducedMotion) {
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-platinum-dim)'
+            ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(212,175,55,0.2)'
+          }
+        }}
+      >
+        {reducedMotion ? (
+          // Motion-off icon: eye with a diagonal line through it
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+            stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        ) : (
+          // Motion-on icon: eye
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+            stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        )}
+      </button>
     </header>
   )
 }

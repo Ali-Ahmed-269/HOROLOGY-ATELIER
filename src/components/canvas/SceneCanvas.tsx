@@ -12,6 +12,7 @@ import ScrollTrigger from 'gsap/ScrollTrigger'
 import { SECTION_CONFIGS, SCENE_CONSTANTS } from '@/lib/scroll.config'
 import { PostProcessingErrorBoundary } from './PostProcessingErrorBoundary'
 import { useExplodedView } from '@/hooks/useExplodedView'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -427,6 +428,7 @@ function WatchExploded({ store }: WatchExplodedProps) {
 
 interface GearKinematicsProps {
   store: React.MutableRefObject<SceneStore>
+  reducedMotion: boolean
 }
 
 /** Cumulative gear chain ratios relative to the mainspring */
@@ -446,7 +448,7 @@ const GEAR_CHAIN = (() => {
 /** Per-gear signed rotation ratios for Z-axis kinematics */
 const GEAR_ROT_RATIOS = [1.0, -0.125, 0.125, -0.125, 0.125]
 
-function GearKinematics({ store }: GearKinematicsProps) {
+function GearKinematics({ store, reducedMotion }: GearKinematicsProps) {
   const groupRef = useRef<THREE.Group>(null)
   const gearRefs = useRef<THREE.Mesh[]>([])
 
@@ -467,12 +469,15 @@ function GearKinematics({ store }: GearKinematicsProps) {
   useFrame((_, delta) => {
     if (!groupRef.current) return
 
-    const velocity = (window as unknown as { lenis?: { velocity: number } }).lenis?.velocity ?? 0
+    // When motion is reduced, freeze gear rotation at its current angle
+    if (!reducedMotion) {
+      const velocity = (window as unknown as { lenis?: { velocity: number } }).lenis?.velocity ?? 0
 
-    gearRefs.current.forEach((mesh, i) => {
-      if (!mesh) return
-      mesh.rotation.z += GEAR_ROT_RATIOS[i] * delta * (1 + Math.abs(velocity) * 2)
-    })
+      gearRefs.current.forEach((mesh, i) => {
+        if (!mesh) return
+        mesh.rotation.z += GEAR_ROT_RATIOS[i] * delta * (1 + Math.abs(velocity) * 2)
+      })
+    }
 
     // Fade gears in/out with explode progress
     const p = store.current.explodeProgress
@@ -522,19 +527,41 @@ function ScrollVelocityTracker({ store }: { store: React.MutableRefObject<SceneS
    HeroScrollTrigger
    Handles the hero section: subtle Y-rotation of the whole
    scene driven by scroll, using SECTION_CONFIGS.hero values.
+
+   When reducedMotion is true:
+   - The ScrollTrigger is not created at all
+   - rotation.y is explicitly zeroed so there is no residual
+     angle from a previous session or a half-initialised frame
    ───────────────────────────────────────────────────────────── */
-function HeroScrollTrigger({ rootRef }: { rootRef: React.RefObject<THREE.Group | null> }) {
+interface HeroScrollTriggerProps {
+  rootRef: React.RefObject<THREE.Group | null>
+  reducedMotion: boolean
+}
+
+function HeroScrollTrigger({ rootRef, reducedMotion }: HeroScrollTriggerProps) {
   useEffect(() => {
+    // Always start with a clean rotation.y so there is no residual
+    // angle regardless of motion preference
+    if (rootRef.current) {
+      rootRef.current.rotation.y = 0
+    }
+
+    // When motion is reduced, hold at rest — no ScrollTrigger needed
+    if (reducedMotion) return
+
     const cfg = SECTION_CONFIGS.hero
     const el = document.getElementById(cfg.id)
     if (!el || !rootRef.current) return
 
-    const proxy = { rot: 0 }
     const st = ScrollTrigger.create({
       trigger: el,
       start: cfg.triggerStart,
       end: cfg.triggerEnd,
       scrub: cfg.scrub,
+      // immediateRender: false prevents GSAP firing onUpdate synchronously
+      // on creation — that synchronous call was the source of the one-frame
+      // spin artifact on mount, even when starting at scroll=0.
+      immediateRender: false,
       onUpdate: (self) => {
         if (rootRef.current) {
           rootRef.current.rotation.y = self.progress * (cfg.rotationPerPx * 600)
@@ -542,8 +569,14 @@ function HeroScrollTrigger({ rootRef }: { rootRef: React.RefObject<THREE.Group |
       },
     })
 
-    return () => { st.kill(); }
-  }, [rootRef])
+    return () => {
+      st.kill()
+      // Reset rotation when the trigger is torn down (e.g. reducedMotion toggle)
+      if (rootRef.current) {
+        rootRef.current.rotation.y = 0
+      }
+    }
+  }, [rootRef, reducedMotion])
 
   return null
 }
@@ -559,6 +592,9 @@ function SceneRoot({ onReady }: { onReady?: () => void }) {
   const cameraTarget = useRef(new THREE.Vector3(0, 1.5, 4))
   const targetFocusDistance = useRef(0.02)
 
+  /* ── Reduced-motion preference ───────────────────── */
+  const { reducedMotion } = useReducedMotion()
+
   /** Mutable store — written by tracker, read by kinematics/explode */
   const store = useRef<SceneStore>({
     explodeProgress: 0,
@@ -570,7 +606,32 @@ function SceneRoot({ onReady }: { onReady?: () => void }) {
     onReady?.()
   }, [])
 
+  const hasLoggedOnMount = useRef(false)
+
+  // Immediately set the camera to hero section resting position/rotation when reducedMotion is true
   useEffect(() => {
+    if (reducedMotion) {
+      camera.position.set(0, 1.5, 4)
+      camera.rotation.set(0, 0, 0)
+      cameraTarget.current.set(0, 1.5, 4)
+      targetFocusDistance.current = 0.02
+      if (dofRef.current) {
+        dofRef.current.cocMaterial.focusDistance = 0.02
+      }
+      
+      if (!hasLoggedOnMount.current) {
+        console.log('Reduced motion active on mount. Camera position set to:', camera.position.x, camera.position.y, camera.position.z)
+        hasLoggedOnMount.current = true
+      }
+    }
+  }, [reducedMotion, camera])
+
+  useEffect(() => {
+    // When reducedMotion is true, do not create ANY of these camera ScrollTriggers at all
+    if (reducedMotion) {
+      return
+    }
+
     const setCamera = (x: number, y: number, z: number, focus: number) => {
       cameraTarget.current.set(x, y, z)
       targetFocusDistance.current = focus
@@ -608,19 +669,26 @@ function SceneRoot({ onReady }: { onReady?: () => void }) {
     ]
 
     return () => triggers.forEach(t => t.kill())
-  }, [])
+  }, [reducedMotion, camera]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useFrame((_, delta) => {
-    // Camera lerp toward target
-    camera.position.lerp(cameraTarget.current, 0.04)
+  useFrame(() => {
+    if (!reducedMotion) {
+      // Camera lerp toward target — disabled when motion is reduced
+      camera.position.lerp(cameraTarget.current, 0.04)
 
-    // DOF focal distance lerp — mutates effect directly, no re-render
-    if (dofRef.current) {
-      dofRef.current.cocMaterial.focusDistance = THREE.MathUtils.lerp(
-        dofRef.current.cocMaterial.focusDistance,
-        targetFocusDistance.current,
-        0.05
-      )
+      // DOF focal distance lerp — mutates effect directly, no re-render
+      if (dofRef.current) {
+        dofRef.current.cocMaterial.focusDistance = THREE.MathUtils.lerp(
+          dofRef.current.cocMaterial.focusDistance,
+          targetFocusDistance.current,
+          0.05
+        )
+      }
+    } else {
+      // Freeze post-processing at its hero-section values and hold camera
+      if (dofRef.current && dofRef.current.cocMaterial.focusDistance !== 0.02) {
+        dofRef.current.cocMaterial.focusDistance = 0.02
+      }
     }
   })
 
@@ -636,11 +704,11 @@ function SceneRoot({ onReady }: { onReady?: () => void }) {
       {/* Root group for hero-section rotation */}
       <group ref={rootRef} position={[0, 0.3, 0]} rotation={[0.15, 0, 0]}>
         <WatchExploded store={store} />
-        <GearKinematics store={store} />
+        <GearKinematics store={store} reducedMotion={reducedMotion} />
       </group>
 
-      {/* Hero rotation driven by ST */}
-      <HeroScrollTrigger rootRef={rootRef} />
+      {/* Hero rotation driven by ST — skipped when motion is reduced */}
+      <HeroScrollTrigger rootRef={rootRef} reducedMotion={reducedMotion} />
 
       <PostProcessingErrorBoundary>
         <PostStack dofRef={dofRef} />
