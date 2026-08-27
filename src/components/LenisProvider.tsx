@@ -5,6 +5,7 @@ import Lenis from 'lenis'
 import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
 import CustomEase from 'gsap/CustomEase'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
 
 gsap.registerPlugin(ScrollTrigger, CustomEase)
 
@@ -42,8 +43,11 @@ registerEasings()
  *  - Lenis drives the scroll position; GSAP reads it via ScrollTrigger.
  *  - `requestAnimationFrame` is delegated entirely to gsap.ticker so there
  *    is exactly one rAF loop on the page.
- *  - On prefers-reduced-motion: reduce, Lenis is destroyed immediately and
- *    the browser's native scroll is used; ScrollTrigger still works.
+ *  - When reducedMotion is true (OS setting or user toggle), Lenis is not
+ *    initialised at all and the browser's native scroll is used; ScrollTrigger
+ *    still works because it reads window.scrollY directly.
+ *  - The effect re-runs when reducedMotion changes so mid-session toggles
+ *    correctly create or destroy the Lenis instance.
  */
 export default function LenisProvider({
   children,
@@ -51,14 +55,17 @@ export default function LenisProvider({
   children: React.ReactNode
 }) {
   const lenisRef = useRef<Lenis | null>(null)
+  const { reducedMotion } = useReducedMotion()
 
   useEffect(() => {
-    /* ── Respect user motion preference ─────────────── */
-    const prefersReducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
-    ).matches
-
-    if (prefersReducedMotion) {
+    /* ── When motion is reduced: fall back to native scroll ── */
+    if (reducedMotion) {
+      // Ensure any previously created Lenis instance is cleaned up
+      if (lenisRef.current) {
+        lenisRef.current.destroy()
+        lenisRef.current = null
+        ;(window as unknown as { lenis?: Lenis }).lenis = undefined
+      }
       ScrollTrigger.defaults({ scroller: window })
       return
     }
@@ -97,7 +104,7 @@ export default function LenisProvider({
       lenisRef.current = null
       ;(window as unknown as { lenis?: Lenis }).lenis = undefined
     }
-  }, [])
+  }, [reducedMotion])
 
   return <>{children}</>
 }

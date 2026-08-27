@@ -373,13 +373,26 @@ body {
   color: var(--color-platinum-white);
 }
 
-/* ── Reduced Motion ─────────────────────────── */
+/* ── Reduced Motion — CSS fallback for anything not gated in JS ──── */
+/*    The JS layer (useReducedMotion hook) handles GSAP, Lenis, and     */
+/*    Three.js animations. This block is the safety net for pure-CSS    */
+/*    transitions and keyframe animations on DOM elements.               */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 120ms !important;
-    scroll-behavior: auto !important;
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1      !important;
+    animation-play-state:      paused !important;
+    transition-duration:       0ms    !important;
+    scroll-behavior:           auto   !important;
+  }
+
+  /* Collapse duration tokens so any inline-style consumers also get 0 */
+  :root {
+    --dur-instant:   0ms;
+    --dur-fast:      0ms;
+    --dur-mid:       0ms;
+    --dur-slow:      0ms;
+    --dur-cinematic: 0ms;
   }
 }
 
