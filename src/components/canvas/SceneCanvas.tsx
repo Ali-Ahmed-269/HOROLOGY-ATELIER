@@ -72,9 +72,10 @@ function StudioLighting() {
    ───────────────────────────────────────────────────────────── */
 interface PostStackProps {
   dofRef?: React.RefObject<DepthOfFieldEffect | null>
+  isMobile: boolean
 }
 
-function PostStack({ dofRef }: PostStackProps) {
+function PostStack({ dofRef, isMobile }: PostStackProps) {
   const gl = useThree((state) => state.gl)
 
   const isContextHealthy = useMemo(() => {
@@ -93,9 +94,9 @@ function PostStack({ dofRef }: PostStackProps) {
   }
 
   return (
-    <EffectComposer multisampling={4}>
-      <DepthOfField ref={dofRef} focusDistance={0.015} focalLength={0.05} bokehScale={1.5} height={480} />
-      <Bloom luminanceThreshold={0.85} luminanceSmoothing={0.4} intensity={0.15} mipmapBlur />
+    <EffectComposer multisampling={isMobile ? 0 : 4}>
+      {!isMobile && <DepthOfField ref={dofRef} focusDistance={0.015} focalLength={0.05} bokehScale={1.5} height={480} />}
+      <Bloom luminanceThreshold={0.85} luminanceSmoothing={0.4} intensity={isMobile ? 0.08 : 0.15} mipmapBlur />
       <Vignette offset={0.4} darkness={0.7} eskil={false} />
     </EffectComposer>
   )
@@ -215,6 +216,12 @@ function WatchExploded({ store }: WatchExplodedProps) {
   /* ── Hover state ref — no re-renders ── */
   const hoveredLayer = useRef<string | null>(null)
 
+  /* ── Touch device detection ── */
+  const [isTouch, setIsTouch] = useState(false)
+  useEffect(() => {
+    setIsTouch(typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0))
+  }, [])
+
   /* ── DOM HUD helper — reads overlay divs from page.tsx ── */
   const getHudEl = (id: string) =>
     typeof document !== 'undefined'
@@ -282,8 +289,8 @@ function WatchExploded({ store }: WatchExplodedProps) {
           ref={hoverCaseRef}
           castShadow receiveShadow
           material={caseHoverMat}
-          onPointerOver={handlePointerOver('caseback', caseHoverMat)}
-          onPointerOut={handlePointerOut('caseback', caseHoverMat)}
+          onPointerOver={isTouch ? undefined : handlePointerOver('caseback', caseHoverMat)}
+          onPointerOut={isTouch ? undefined : handlePointerOut('caseback', caseHoverMat)}
         >
           <cylinderGeometry args={[1.1, 1.1, 0.35, 64]} />
         </mesh>
@@ -304,8 +311,8 @@ function WatchExploded({ store }: WatchExplodedProps) {
           ref={hoverBridgeRef}
           position={[0, 0.06, 0]}
           material={bridgeHoverMat}
-          onPointerOver={handlePointerOver('bridges', bridgeHoverMat)}
-          onPointerOut={handlePointerOut('bridges', bridgeHoverMat)}
+          onPointerOver={isTouch ? undefined : handlePointerOver('bridges', bridgeHoverMat)}
+          onPointerOut={isTouch ? undefined : handlePointerOut('bridges', bridgeHoverMat)}
         >
           <cylinderGeometry args={[0.90, 0.90, 0.04, 64]} />
         </mesh>
@@ -348,8 +355,8 @@ function WatchExploded({ store }: WatchExplodedProps) {
           position={[0, 0.18, 0]}
           castShadow
           material={dialHoverMat}
-          onPointerOver={handlePointerOver('dial', dialHoverMat)}
-          onPointerOut={handlePointerOut('dial', dialHoverMat)}
+          onPointerOver={isTouch ? undefined : handlePointerOver('dial', dialHoverMat)}
+          onPointerOut={isTouch ? undefined : handlePointerOut('dial', dialHoverMat)}
         >
           <cylinderGeometry args={[0.98, 0.98, 0.02, 64]} />
         </mesh>
@@ -371,8 +378,8 @@ function WatchExploded({ store }: WatchExplodedProps) {
             ref={hoverHandsRef}
             position={[0, 0.21, -0.16]}
             material={handsHoverMat}
-            onPointerOver={handlePointerOver('hands', handsHoverMat)}
-            onPointerOut={handlePointerOut('hands', handsHoverMat)}
+            onPointerOver={isTouch ? undefined : handlePointerOver('hands', handsHoverMat)}
+            onPointerOut={isTouch ? undefined : handlePointerOut('hands', handsHoverMat)}
           >
             <boxGeometry args={[0.04, 0.006, 0.32]} />
           </mesh>
@@ -397,8 +404,8 @@ function WatchExploded({ store }: WatchExplodedProps) {
           ref={hoverCrystalRef}
           position={[0, 0.22, 0]}
           material={crystalHoverMat}
-          onPointerOver={handlePointerOver('crystal', crystalHoverMat)}
-          onPointerOut={handlePointerOut('crystal', crystalHoverMat)}
+          onPointerOver={isTouch ? undefined : handlePointerOver('crystal', crystalHoverMat)}
+          onPointerOut={isTouch ? undefined : handlePointerOut('crystal', crystalHoverMat)}
         >
           <cylinderGeometry args={[0.96, 0.96, 0.04, 64]} />
         </mesh>
@@ -451,6 +458,7 @@ const GEAR_ROT_RATIOS = [1.0, -0.125, 0.125, -0.125, 0.125]
 function GearKinematics({ store, reducedMotion }: GearKinematicsProps) {
   const groupRef = useRef<THREE.Group>(null)
   const gearRefs = useRef<THREE.Mesh[]>([])
+  const { gl } = useThree()
 
   /** Tooth-mark geometry — shared flat cylinder per gear, created once */
   const gearGeos = useMemo(() =>
@@ -468,6 +476,11 @@ function GearKinematics({ store, reducedMotion }: GearKinematicsProps) {
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
+
+    // only accumulate gear rotation when the canvas element is in the viewport
+    const rect = gl.domElement.getBoundingClientRect()
+    const isVisible = rect.bottom > 0 && rect.top < window.innerHeight
+    if (!isVisible) return
 
     // When motion is reduced, freeze gear rotation at its current angle
     if (!reducedMotion) {
@@ -585,7 +598,7 @@ function HeroScrollTrigger({ rootRef, reducedMotion }: HeroScrollTriggerProps) {
    SceneRoot — combines all scene objects with shared store ref
    Isolated so useThree() is available (must be inside <Canvas>)
    ───────────────────────────────────────────────────────────── */
-function SceneRoot({ onReady }: { onReady?: () => void }) {
+function SceneRoot({ onReady, isMobile }: { onReady?: () => void; isMobile: boolean }) {
   const { gl, camera } = useThree()
   const rootRef = useRef<THREE.Group>(null)
   const dofRef = useRef<DepthOfFieldEffect | null>(null)
@@ -711,7 +724,7 @@ function SceneRoot({ onReady }: { onReady?: () => void }) {
       <HeroScrollTrigger rootRef={rootRef} reducedMotion={reducedMotion} />
 
       <PostProcessingErrorBoundary>
-        <PostStack dofRef={dofRef} />
+        <PostStack dofRef={dofRef} isMobile={isMobile} />
       </PostProcessingErrorBoundary>
       <Preload all />
     </>
@@ -729,8 +742,10 @@ interface SceneCanvasProps {
 export default function SceneCanvas({ onReady }: SceneCanvasProps) {
   const [webglAvailable, setWebglAvailable] = useState<boolean | null>(null)
   const [isGlReady, setIsGlReady] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
+    setIsMobile(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent))
     try {
       const canvas = document.createElement('canvas')
       const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
@@ -794,7 +809,7 @@ export default function SceneCanvas({ onReady }: SceneCanvasProps) {
           alpha: false,
           powerPreference: 'high-performance',
         }}
-        dpr={[1, 2]}
+        dpr={isMobile ? [1, 1] : [1, 2]}
         shadows={{ type: THREE.PCFShadowMap }}
         camera={{ position: [0, 0, 6], fov: 45, near: 0.01, far: 100 }}
         style={{ background: '#0A0A0C' }}
@@ -830,7 +845,7 @@ export default function SceneCanvas({ onReady }: SceneCanvasProps) {
           // Note: onReady is idempotent — LoadingVeil ignores duplicate calls
         }}
       >
-        {isGlReady && <SceneRoot onReady={onReady} />}
+        {isGlReady && <SceneRoot onReady={onReady} isMobile={isMobile} />}
       </Canvas>
     </div>
   )

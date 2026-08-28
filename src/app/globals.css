@@ -223,6 +223,10 @@ body {
   outline-offset: 3px;
 }
 
+.btn-atelier, .btn, .btn-primary, .btn-ghost {
+  min-height: 44px;
+}
+
 /* ── Navigation Bar ─────────────────────────── */
 .nav-bar {
   position: fixed;
@@ -481,7 +485,7 @@ body {
   /* Fix text containers */
   .section-inner {
     max-width: 100% !important;
-    overflow: hidden !important;
+    overflow-x: hidden !important;
     box-sizing: border-box !important;
   }
 
@@ -521,5 +525,16 @@ body {
 @media (max-width: 480px) {
   .nav-links {
     display: none !important;
+  }
+  .hero-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+  }
+  .hero-actions .btn-atelier,
+  .hero-actions button,
+  .hero-actions a {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
   }
 }

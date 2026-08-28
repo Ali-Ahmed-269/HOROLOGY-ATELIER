@@ -69,8 +69,8 @@ function Navigation() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: 36,
-          height: 36,
+          width: 44,
+          height: 44,
           background: reducedMotion
             ? 'rgba(212, 175, 55, 0.12)'
             : 'transparent',
@@ -196,7 +196,7 @@ function HeroSection() {
         </p>
 
         {/* CTA pair */}
-        <div style={{ display: 'flex', gap: 'var(--sp-5)', flexWrap: 'wrap' }}>
+        <div className="hero-actions" style={{ display: 'flex', gap: 'var(--sp-5)', flexWrap: 'wrap' }}>
           <a
             href="#movement"
             className="btn-atelier"
@@ -669,7 +669,7 @@ function ReserveSection() {
                       padding: '14px 16px',
                       color: 'var(--color-platinum-white)',
                       fontFamily: 'var(--font-space-grotesk, sans-serif)',
-                      fontSize: 'var(--text-body)',
+                      fontSize: '16px',
                       letterSpacing: '0.01em',
                       outline: 'none',
                       width: '100%',
@@ -700,7 +700,7 @@ function ReserveSection() {
                     padding: '14px 16px',
                     color: 'var(--color-platinum-white)',
                     fontFamily: 'var(--font-space-grotesk, sans-serif)',
-                    fontSize: 'var(--text-body)',
+                    fontSize: '16px',
                     letterSpacing: '0.01em',
                     outline: 'none',
                     width: '100%',
