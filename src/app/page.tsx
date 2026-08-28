@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import LenisProvider from '@/components/LenisProvider'
 import LoadingVeil from '@/components/LoadingVeil'
 import { useActiveSection } from '@/hooks/useActiveSection'
@@ -35,22 +36,34 @@ function Navigation() {
       <nav aria-label="Primary navigation">
         <ul className="nav-links">
           {[
-            { href: '#movement',      label: 'Movement'       },
-            { href: '#craftsmanship', label: 'Craftsmanship'  },
-            { href: '#specs',         label: 'Specifications'  },
-            { href: '#reserve',       label: 'Reserve'         },
-          ].map(({ href, label }) => {
-            const sectionId = href.slice(1)
+            { href: '#movement',      label: 'Movement',       scroll: true  },
+            { href: '#craftsmanship', label: 'Craftsmanship',  scroll: true  },
+            { href: '#specs',         label: 'Specifications', scroll: true  },
+            { href: '#reserve',       label: 'Reserve',        scroll: true  },
+            { href: '/about',         label: 'About',          scroll: false },
+            { href: '/contact',       label: 'Contact',        scroll: false },
+          ].map(({ href, label, scroll }) => {
+            const sectionId = href.startsWith('#') ? href.slice(1) : href.slice(1)
+            const isActive = activeId === sectionId
             return (
               <li key={href}>
-                <a
-                  href={href}
-                  className={`nav-link${activeId === sectionId ? ' active' : ''}`}
-                  id={`nav-${sectionId}`}
-                  aria-current={activeId === sectionId ? 'true' : undefined}
-                >
-                  {label}
-                </a>
+                {scroll ? (
+                  <a
+                    href={href}
+                    className={`nav-link${isActive ? ' active' : ''}`}
+                    id={`nav-${sectionId}`}
+                    aria-current={isActive ? 'true' : undefined}
+                  >
+                    {label}
+                  </a>
+                ) : (
+                  <Link
+                    href={href}
+                    className="nav-link"
+                  >
+                    {label}
+                  </Link>
+                )}
               </li>
             )
           })}

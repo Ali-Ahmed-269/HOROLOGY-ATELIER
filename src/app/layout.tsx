@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
 import './globals.css'
+import PageTransition from '@/components/PageTransition'
 
 /* ── Editorial Heading Font ─────────────────────────────────────────── */
 const cormorant = Cormorant_Garamond({
@@ -68,6 +69,7 @@ export default function RootLayout({
       style={{ background: '#0A0A0C' }}
     >
       <body className="min-h-dvh overflow-x-hidden bg-void antialiased">
+        <PageTransition />
         {children}
       </body>
     </html>
